@@ -10,6 +10,7 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install -e ".[test]"
       - run: python -m pytest -q
+      - run: python -m pip install build && python -m build && python -m pip install --force-reinstall dist/*.whl && python -c "from importlib.resources import files; import geowebcollector; assert files('geowebcollector').joinpath('playground.js').read_text()"
   chromium:
     runs-on: ubuntu-latest
     steps:
@@ -19,4 +20,4 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install -e ".[test]"
       - run: python -m playwright install --with-deps chromium
-      - run: GEO_BROWSER_TESTS=1 python -m pytest -q tests/test_browser_documents.py
+      - run: GEO_BROWSER_TESTS=1 python -m pytest -q tests/test_browser_documents.py tests/test_playground.py

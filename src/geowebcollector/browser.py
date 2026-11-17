@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 from hashlib import sha256
 import math
+import os
 
 from pydantic import Field
 
@@ -67,7 +68,7 @@ class BrowserExtractor:
                     else:
                         from playwright.async_api import async_playwright
                         self._driver = await async_playwright().start()
-                        self._browser = await self._driver.chromium.launch()
+                        self._browser = await self._driver.chromium.launch(executable_path=os.environ.get("GEO_CHROMIUM_PATH") or None)
             except asyncio.CancelledError:
                 await self.__aexit__(None, None, None)
                 raise
