@@ -45,6 +45,44 @@ def test_http_assets_and_validation():
         server.shutdown();server.server_close();thread.join()
 
 
+def test_codespaces_private_forwarded_host(monkeypatch):
+    server=ThreadingHTTPServer(('127.0.0.1',0),Handler)
+    thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+    def request(host,origin=None,method='GET'):
+        conn=http.client.HTTPConnection('127.0.0.1',server.server_port,timeout=5)
+        headers={'Host':host}
+        if origin is not None: headers['Origin']=origin
+        if method=='POST':
+            headers['Content-Type']='application/json'
+            body=json.dumps({'operation':'extract_html','params':{'authorized':False}})
+            conn.request('POST','/api/run',body=body,headers=headers)
+        else:
+            conn.request('GET','/api/operations',headers=headers)
+        response=conn.getresponse();response.read();status=response.status;conn.close()
+        return status
+    host=f'example-space-{server.server_port}.app.github.dev'
+    try:
+        assert request(host)==403
+        monkeypatch.setenv('CODESPACES','true')
+        monkeypatch.setenv('CODESPACE_NAME','example-space')
+        monkeypatch.setenv('GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN','app.github.dev')
+        assert request(host)==200
+        assert request(host,'https://'+host)==200
+        assert request(host,'https://'+host,method='POST')==400  # Accepted host; rejected input.
+        for invalid_host,origin in [(host,'http://'+host),(host,'https://evil.test'),
+                                    (host+'.evil.test',None),
+                                    (f'example-space-{server.server_port+1}.app.github.dev',None),
+                                    ('evil.app.github.dev',None)]:
+            assert request(invalid_host,origin)==403
+        monkeypatch.setenv('GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN','app.github.dev.evil.test')
+        assert request(host)==403
+        monkeypatch.delenv('CODESPACES')
+        assert request(host)==403
+        assert request(f'localhost:{server.server_port}')==200
+    finally:
+        server.shutdown();server.server_close();thread.join()
+
+
 def test_sample_chromium_when_opted_in():
     import os
     if os.environ.get('GEO_BROWSER_TESTS') != '1':
