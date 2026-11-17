@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling>=1.29,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "geowebcollector"
+version = "0.1.0a1"
+description = "Independent rights-gated Playwright HTML extraction"
+requires-python = ">=3.12,<4"
+dependencies = ["pydantic>=2.14,<3", "playwright==1.65.0"]
+
+[project.optional-dependencies]
+test = ["pytest>=9,<10"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/geowebcollector"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
