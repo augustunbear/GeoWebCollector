@@ -1,0 +1,12 @@
+{
+  "name": "GeoWebCollector Playground",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  "forwardPorts": [8766],
+  "portsAttributes": {
+    "8766": {
+      "label": "GeoWebCollector Playground"
+    }
+  },
+  "postCreateCommand": "python -m pip install -e '.[test]' && python -m playwright install --with-deps chromium",
+  "postStartCommand": "bash .devcontainer/start-playground.sh"
+}
