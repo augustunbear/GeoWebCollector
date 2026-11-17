@@ -66,6 +66,9 @@ def test_timeout_and_size_limits_without_chromium():
 
 
 def test_extractor_public_method_is_registered():
+    import inspect
     from geowebcollector.browser import BrowserExtractor
-    assert callable(BrowserExtractor.extract)
+    methods={name for name,fn in inspect.getmembers(BrowserExtractor,inspect.iscoroutinefunction) if not name.startswith('_')}
+    registered={'extract' if key=='extract_html' else key for key in catalog()}
+    assert methods == registered
     assert catalog()['extract_html']['status']=='executable'
